@@ -9,7 +9,7 @@
 \setlength \parindent{0pt}
 
 \title{Super Mario 64 - Mario's Jump Height}
-\date{December 10th, 2025}
+\date{December 13th, 2025}
 \author{Chase Bradley}
 
 \begin{document}
@@ -39,11 +39,18 @@ height function.\\
 Let $g \in (\mathbb{R}^{+} - \{0\})$ be a gravity constant.  This should remain constant
 throughout the jump, but it can change based on action, such as long jumps.\\
 
-We define a function $v_g(t): \mathbb{R}^{+} \to \mathbb{R}$, such that
-$v_g(t) = max(v_0 - g \lfloor t \rfloor, -75)$.  This function will represent
-Mario's velocity $t$ in-game ticks after entering an airborne state.  We take
-the max because Mario's terminal velocity is 75 units downward per frame.  We
-also take the floor of $t$ so we can have a continuous domain.\\
+We'll define a function $v_g(t): \mathbb{R}^{+} \to \mathbb{R}$ which represents
+Mario's velocity after $t$ in-game ticks since entering an airborne state as the
+following:
+
+\begin{eqnarray*}
+v_g(t) &=& max(v_0 - \lfloor t \rfloor, -75) \\
+\end{eqnarray*}
+
+We take the max because Mario's terminal velocity is 75 units downward per
+frame.  We also take the floor of $t$ so we have a domain over
+$\mathbb{R}^{+}$ instead of over $\mathbb{Z}^{+}$.  This will be useful for
+deriving the position function.\\
 
 \subsection{Position Function}
 \label{sec:height-function-position}
@@ -53,10 +60,12 @@ $r_g(t): \mathbb{R}^{+} \to \mathbb{R}$ which calculates Mario's vertical
 displacement from his original jump location after $t$ in-game ticks with a
 gravity of $g$.\\
 
-To solve this, we will use integral Calculus, but with some minor liberties.
-Since we're using the floor function and the max function, our function is not
-continuous over its domain or range, thus can't be integrated normally.  To
-solve this, we will do the following:
+To solve this, we will use calculus, but with some minor liberties.  Since we're
+using the floor function and the max function, our function is not easy to
+integrate.  In particular, the floor function means we can't use regular
+integration to solve this because the function isn't continuous.  In addition,
+the max function secretly turns our function into a piecewise function.  To
+solve both these problems, we're going to do the following:
 
 \begin{itemize}
 \item Define a continuous function which represents the antiderivative of the floor function
@@ -67,17 +76,30 @@ For the first point, we will define the following antiderivative of the floor
 function:
 
 \begin{eqnarray*}
-\int_0^x \lfloor t \rfloor dt &=& \frac{1}{2} \lfloor x \rfloor (2x - 1 - \lfloor x \rfloor)
+\int_0^x \lfloor t \rfloor dt &=& \frac{1}{2} \lfloor x \rfloor (2x - 1 - \lfloor x \rfloor) \\
 \end{eqnarray*}
 
-This function has the nice property that it's continuous over both its domain
-and range, as well as having a linear slope which more accurately interpolates
-the non-integer values.  This also ensures the function is monotonic for
-$x \geq 0$, which is not true with a purely quadratic antiderivative.\\
+This function has the nice property that it's continuous, as well as having a
+linear slope which more accurately interpolates the non-integer values.  This
+also ensures the function is monotonic for $x \geq 0$.  To explain why both
+these points are important, consider the following alternative antiderivative:
+
+\begin{eqnarray*}
+\int_0^x \lfloor t \rfloor dt &=& \frac{x(x-1)}{2} \\
+\end{eqnarray*}
+
+This function works fine for positive integer values, but it begins to show
+issues with non-integer values.  On the interval $[0,1]$, our function actually
+goes negative.  This doesn't make any sense, because we're accumulating strictly
+positive quantities.  In addition, quadratic interpolation doesn't make sense
+because each interval of the floor function is analygous to integrating a
+constant, which should be linear.  Thus, we'd expect linear interpolation
+between each integer point, not quadratic interpolation.  Thus, this function
+isn't suitable.\\
 
 Next, we'll redefine $v_g(t)$ to be piecewise, free of the max function.  This
-will allow us to integrate each component of the function which is continuous
-over its own domain, and combine together at the end.
+will allow us to integrate each component of the function independently, then
+combine together as a new piecewise function after integration.
 
 \begin{eqnarray*}
 v_g(t) &=& \begin{cases}
@@ -200,7 +222,7 @@ h_g(v) &=& \lceil \frac{v}{g} \rceil (v - \frac{g}{2} (\lceil \frac{v}{g} \rceil
 \subsection{Inverse Height Function}
 \label{sec:height-function-inverse-height}
 
-Lastly, we will find an inverse for for the height function
+Lastly, we will find an inverse for the height function
 $h^{-1}_g (r): \mathbb{R}^{+} \to \mathbb{R}^{+}$. This will be useful when we
 want to find the required velocity to travel a given height with a given gravity
 constant.\\
@@ -212,8 +234,8 @@ velocity can be a function of forward running speed.  Thus, we'll define the
 following functions:\\
 
 \begin{eqnarray*}
-v &:& A \to \mathbb{R}^{+} \text{ such that } A \subseteq \mathbb{R}, 0 \in \text{\textsf{Im}}(v) \\
-v^{-1} &:& \mathbb{R}^{+} \to A \text{ such that for } \forall r \in \text{\textsf{Im}}(v), \exists a \in A: v(a) = r \\
+v &:& A \to \mathbb{R}^{+} \text{ such that } A \subseteq \mathbb{R}, 0 \in \text{\textsf{Im}}(v), v \text{ is injective } \\
+v^{-1} &:& \mathbb{R}^{+} \to A \text{ such that for } \forall a \in A, v^{-1}(v(a)) = a \\
 \end{eqnarray*}
 
 We will now consider given $r \in \mathbb{R}^{+}$,
@@ -285,10 +307,10 @@ $(v^{-1}(gn), v^{-1}(g(n + 1))]$.
 
 \end{proof}
 
-With this knowledge, we now know that if we can find $n$ in terms of $r$, we can
-then rewrite $h_g (v(a)) = m_n v(a) + b_n$ over the interval
+With this knowledge, we now know if we can find $n$ in terms of $r$, we can then
+rewrite $h_g (v(a)) = m_n v(a) + b_n$ over the interval
 $(v^{-1}(gn), v^{-1}(g(n + 1))]$.  Assuming we already have $m_n$ and $b_n$,
-this is trivial to solve:
+this is trivial to solve.
 
 \begin{eqnarray*}
 h_g(v(a)) &=& r \\
@@ -319,37 +341,25 @@ n^2 + n - \frac{2r}{g} &=& 0 \\
 (1)n^2 + (1)n + (\frac{-2r}{g}) &=& 0 \\
 n &=& \frac{-(1) + \sqrt{(1)^2 - 4(1)(\frac{-2r}{g})}}{2(1)} \\
 n &=& \frac{-1 + \sqrt{1 + \frac{8r}{g}}}{2} \\
-n &=& \frac{-1 + \sqrt{\frac{g}{g} + \frac{8r}{g}}}{2} \\
-n &=& \frac{-1 + \sqrt{\frac{8r + g}{g}}}{2} \\
-n &=& \frac{-1 + \frac{\sqrt{8r + g}}{\sqrt{g}}}{2} \\
-n &=& \frac{\frac{-\sqrt{g}}{\sqrt{g}} + \frac{\sqrt{8r + g}}{\sqrt{g}}}{2} \\
-n &=& \frac{\frac{\sqrt{8r + g} - \sqrt{g}}{\sqrt{g}}}{2} \\
-n &=& \frac{\sqrt{8r + g} - \sqrt{g}}{2 \sqrt{g}} \\
-n &=& \frac{\sqrt{g} (\sqrt{8r + g} - \sqrt{g})}{\sqrt{g} (2 \sqrt{g})} \\
-n &=& \frac{\sqrt{g} \sqrt{8r + g} - g}{2g} \\
-n &=& \frac{\sqrt{8rg + g^2} - g}{2g} \\
-\end{eqnarray*}
-
-\begin{eqnarray*}
-n &=& \frac{\sqrt{8rg + g^2}}{2g} - \frac{1}{2} \\
-n &=& \frac{\sqrt{8rg + g^2}}{2 \sqrt{g^2}} - \frac{1}{2} \\
-n &=& \frac{1}{2} \sqrt{\frac{8r}{g} + 1} - \frac{1}{2} \\
-n &=& \frac{1}{\sqrt{4}} \sqrt{\frac{8r}{g} + 1} - \frac{1}{2} \\
-n &=& \sqrt{\frac{8r}{4g} + \frac{1}{4}} - \frac{1}{2} \\
+n &=& \frac{-1}{2} + \frac{1}{2}\sqrt{1 + \frac{8r}{g}} \\
+n &=& \frac{1}{2}\sqrt{1 + \frac{8r}{g}} - \frac{1}{2} \\
+n &=& \sqrt{\frac{1}{4}(1 + \frac{8r}{g})} - \frac{1}{2} \\
+n &=& \sqrt{\frac{1}{4} + \frac{8r}{4g}} - \frac{1}{2} \\
+n &=& \sqrt{\frac{1}{4} + \frac{2r}{g}} - \frac{1}{2} \\
 n &=& \sqrt{\frac{2r}{g} + \frac{1}{4}} - \frac{1}{2} \\
 \end{eqnarray*}
 
-This will give us a real number which is between our desired value for $n$.  We
-get the exact value for $n$ by taking the floor of the above.  This results in
+This will give us a real number which is on the interval $[n, n + 1)$.  We get
+the exact value for $n$ by taking the floor of the above.  This results in our
 final solution for $n$:
 
 \begin{eqnarray*}
 n &=& \lfloor \sqrt{\frac{2r}{g} + \frac{1}{4}} - \frac{1}{2} \rfloor \\
 \end{eqnarray*}
 
-Now, we're going to solve for $m_n$ and $b_n$ in terms of $n$.  This is
-actually pretty simple.  We just plug in for the endpoint of the $n$'th interval
-for all the ceil terms and write it in the correct form.\\
+We will now solve for $m_n$ and $b_n$ in terms of $n$.  This is actually pretty
+simple.  We just plug in for the endpoint of the $n$'th interval for all the
+ceil terms and write it in the correct form.\\
 
 To help clean things up, we're going to first simplify
 $\lceil \frac{v(v^{-1}(g(n + 1)))}{g} \rceil$.
@@ -379,7 +389,8 @@ m_n &=& n + 1 \\
 b_n &=& \frac{-gn(n + 1)}{2} \\
 \end{eqnarray*}
 
-Now, let's revisit our previous solution for $v^{-1}(h^{-1}_g(r))$ plug in for $m_n$ and $b_n$.\\
+Now, let's revisit our previous solution for $v^{-1}(h^{-1}_g(r))$ and plug in
+for $m_n$ and $b_n$.\\
 
 \begin{eqnarray*}
 v^{-1}(h^{-1}_g(r)) &=& v^{-1}(\frac{r - b_n}{m_n}) \\
@@ -392,11 +403,11 @@ v^{-1}(h^{-1}_g(r)) &=& v^{-1}(\frac{r}{n + 1} + \frac{gn}{2}) \\
 
 Finally, we write $n$ in terms of $r$ to get our final solution to $v^{-1}(h^{-1}_g(r))$.\\
 
-Now, we could just plug in for $n$, but that would result in a butt-ugly
-equation with no way to simplify.  Instead, we're going to define
+We could just plug in for $n$, but that would result in a butt ugly equation
+with no way to simplify.  Instead, we're going to define
 $n_g(r): \mathbb{R}^{+} \to \mathbb{Z}^{+}$ to be our solution for $n$
 given $r$, then use this function inside our definition for $h_g^{-1}(r)$.
-This gives us our final answer for $h_g^{-1}(r)$:
+This gives us our final answer for $h_g^{-1}(r)$.
 
 \begin{eqnarray*}
 n_g(r) &=& \lfloor \sqrt{\frac{2r}{g} + \frac{1}{4}} - \frac{1}{2}\rfloor \\
@@ -416,7 +427,7 @@ For reference, here is a table of all relevant functions for this section:
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
-Name & Identifier & Domain and Range & Definition \\
+Name & Identifier & Domain and Codomain & Definition \\
 \hline
 Velocity Function & $v_g(t)$ & $\mathbb{R}^{+} \to \mathbb{R}$ & $v_g(t) = max(v_0 - g \lfloor t \rfloor, -75)$ \\
 \hline
@@ -440,8 +451,7 @@ Inverse Height Function & $h_g^{-1}(r)$ & $\mathbb{R}^{+} \to \mathbb{R}^{+}$ & 
 
 We will now analyze how different "jumping" actions set Mario's starting
 vertical velocity and affect gravity, which can be used with the previously
-derived height function $h(v,g)$ to compute the peak height for each
-jumping action.
+derived height function to compute the peak height for each jumping action.
 
 \subsection{Jumping Velocities}
 \label{sec:jumping-actions-velocities}
@@ -581,12 +591,12 @@ Jump While Burning & \textsf{ACT\_BURNING\_JUMP} & $140$ & \\
 \hline
 Name & Identifier & Peak Jump Height (units) & Squished Peak Jump Height (units) & Domain (units) \\
 \hline
-Single Jump & \textsf{ACT\_SINGLE\_JUMP} & $\lceil \frac{168 + f}{16} \rceil (44 + \frac{f}{4} - 2\lceil \frac{168 + f}{16} \rceil)$ & $\lceil \frac{168 + f}{32} \rceil (23 + \frac{f}{8} - 2\lceil \frac{168 + f}{32} \rceil)$ & $f \geq -184$ \\
-Double Jump & \textsf{ACT\_DOUBLE\_JUMP} & $\lceil \frac{208 + f}{16} \rceil (54 + \frac{f}{4} - 2\lceil \frac{208 + f}{16} \rceil)$ & $\lceil \frac{208 + f}{32} \rceil (28 + \frac{f}{8} - 2\lceil \frac{208 + f}{32} \rceil)$ & $f \geq -224$ \\
-Jump With Object & \textsf{ACT\_HOLD\_JUMP} & $\lceil \frac{168 + f}{16} \rceil (44 + \frac{f}{4} - 2\lceil \frac{168 + f}{16} \rceil)$ & $\lceil \frac{168 + f}{32} \rceil (23 + \frac{f}{8} - 2\lceil \frac{168 + f}{32} \rceil)$ & $f \geq -184$ \\
-Jump While Riding Shell & \textsf{ACT\_RIDING\_SHELL\_JUMP} & $\lceil \frac{168 + f}{16} \rceil (44 + \frac{f}{4} - 2\lceil \frac{168 + f}{16} \rceil)$ & $\lceil \frac{168 + f}{32} \rceil (23 + \frac{f}{8} - 2\lceil \frac{168 + f}{32} \rceil)$ & $f \geq -184$ \\
-Sliding Kick (landing bounce) & \textsf{ACT\_SLIDE\_KICK} & $\lfloor \frac{v}{4} \rfloor (\frac{v}{2} - 1 - \lfloor \frac{v}{4} \rfloor)$ & & $-75 \leq v \leq 0$\\
-Steep Jump & \textsf{ACT\_STEEP\_JUMP} & $\lceil \frac{168 + f}{16} \rceil (44 + \frac{f}{4} - 2\lceil \frac{168 + f}{16} \rceil)$ & $\lceil \frac{168 + f}{32} \rceil (23 + \frac{f}{8} - 2\lceil \frac{168 + f}{32} \rceil)$ & $f \geq -184$ \\
+Single Jump & \textsf{ACT\_SINGLE\_JUMP} & $h_4(42 + \frac{f}{4})$ & $h_4(21 + \frac{f}{8})$ & $f \geq -184$ \\
+Double Jump & \textsf{ACT\_DOUBLE\_JUMP} & $h_4(52 + \frac{f}{4})$ & $h_4(26 + \frac{f}{8})$ & $f \geq -224$ \\
+Jump With Object & \textsf{ACT\_HOLD\_JUMP} & $h_4(42 + \frac{f}{4})$ & $h_4(21 + \frac{f}{8})$ & $f \geq -184$ \\
+Jump While Riding Shell & \textsf{ACT\_RIDING\_SHELL\_JUMP} & $h_4(42 + \frac{f}{4})$ & $h_4(21 + \frac{f}{8})$ & $f \geq -184$ \\
+Sliding Kick (landing bounce) & \textsf{ACT\_SLIDE\_KICK} & $h_2(- \frac{v}{2})$ & & $-75 \leq v \leq 0$\\
+Steep Jump & \textsf{ACT\_STEEP\_JUMP} & $h_4(42 + \frac{f}{4})$ & $h_4(21 + \frac{f}{8})$ & $f \geq -184$ \\
 \hline
 \end{tabular}
 \end{tiny}
@@ -598,18 +608,19 @@ either positive or zero.  In addition, it's impossible to have a sliding kick
 landing bounce with a vertical velocity smaller than terminal velocity, which is
 $-75$ for this action.\\
 
-Also notice that we use the floor function instead of ceil function for the
-sliding kick landing bounce.  This is because given $x \in \mathbb{R}$,
-$\lceil -x \rceil = - \lfloor x \rfloor$ is generally true, and this fact was
-used in the derivation.\\
+Also notice that we give variable jump height in terms of $h_g(v)$ without
+plugging in and simplifying.  This is because there are not many simplifications
+to be made, thus it's redundant to plug in for each function seperately.
+Plugging in the velocity function and simplifying the height function is left as
+an exercise for the reader.\\
 
 We're now going to show the required speed to reach a jump height of
-$r \in \mathbb{R}^{+}$ for all the variable jumping actions.  To every single
-action being a nightmare equation, we're going to refer to the definition of the
-inverse height function $h_g^{-1}$ from
-\hyperref[sec:height-function-inverse-height]{section 1.4}.  Also note that we
-don't provide a function-specific domain here.  This is because it's redundant,
-as the domain of $h_g^{-1}$ is always $\mathbb{R}^{+}$ by definition.\\
+$r \in \mathbb{R}^{+}$ for all the variable jumping actions.  Like above, we
+will give equations in terms of $h_g^{-1}(r)$ from
+\hyperref[sec:height-function-inverse-height]{section 1.4} to avoid a nightmare
+of horrendous equations which can't be simplified.  Also note that we don't
+provide a function-specific domain here.  This is because it's redundant, as the
+domain of $h_g^{-1}$ is always $\mathbb{R}^{+}$ by definition.\\
 
 \begin{center}
 \begin{tiny}
@@ -633,12 +644,13 @@ Steep Jump & \textsf{ACT\_STEEP\_JUMP} & $4h_4^{-1}(r) - 168$ & $8h_4^{-1}(r) - 
 
 A minor point, but something interesting to note.  There are two complexity
 classes jumping action heights can be classified into.  Given height function
-$h^j \in \{h_g : g \in \mathbb{R}^{+} - \{0\}\}$ for jumping action $j$, $h^j$ can be
-classified into one of the following complexity classes:
+$h^j \in \{h_g : g \in \mathbb{R}^{+} - \{0\}\}$ for jumping action $j$ and
+initial velocity $v \in \mathbb{R}^{+}$, $h^j$ can be classified into one of the
+following complexity classes:
 
 \begin{eqnarray*}
-h^j &\in& \Theta(1) \\
-h^j &\in& \Theta(n^2) \\
+h^j(v) &\in& \Theta(1) \\
+h^j(v) &\in& \Theta(v^2) \\
 \end{eqnarray*}
 
 This means the jump height is either always constant, or increases
@@ -653,7 +665,7 @@ as the previous jump.\\
 
 All of the jumping actions with a constant peak height belong to $\Theta(1)$,
 and all jumping actions which are a function of either Mario's forward speed or
-vertical speed belong to $\Theta(n^2)$.
+vertical speed belong to $\Theta(v^2)$.
 
 \newpage
 \section{Applications}
@@ -669,7 +681,7 @@ Mario's vertical collision hitbox is 160 units tall.  That is, if a ceiling's
 height is 160 units above Mario or more, he will be allowed to fit
 underneath it.  In the case of grabbable ceilings, if Mario's next position is
 less than 160 units below the ceiling's hitbox, he will grab the ceiling.
-However, ceilings can only be grabbed either from a single jump or double jump
+However, ceilings can only be grabbed from either a single jump or a double jump
 state.\\
 
 What if there is a ceiling we want to grab, where we know how high off the
