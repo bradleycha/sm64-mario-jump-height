@@ -44,7 +44,7 @@ Mario's velocity after $t$ in-game ticks since entering an airborne state as the
 following:
 
 \begin{eqnarray*}
-v_g(t) &=& max(v_0 - \lfloor t \rfloor, -75) \\
+v_g(t) &=& max(v_0 - g \lfloor t \rfloor, -75) \\
 \end{eqnarray*}
 
 We take the max because Mario's terminal velocity is 75 units downward per
