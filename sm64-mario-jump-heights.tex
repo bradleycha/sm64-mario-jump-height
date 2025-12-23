@@ -9,7 +9,7 @@
 \setlength \parindent{0pt}
 
 \title{Super Mario 64 - Mario's Jump Height}
-\date{December 13th, 2025}
+\date{December 23rd, 2025}
 \author{Chase Bradley}
 
 \begin{document}
@@ -108,21 +108,23 @@ v_g(t) &=& \begin{cases}
 \end{cases}
 \end{eqnarray*}
 
-With these restrictions lifted, we can now compute $r_g(t)$.
+With these restrictions lifted, we can now compute $r_g(t)$.  Note that for the
+terminal velocity, we'll use a generic lower integral bound $\alpha$.  This is
+because it's tricky to derive this, and will later turn out to be irrelevant.
 
 \begin{eqnarray*}
-r_g(t) &=& \int_0^t v(w) dw \\
+r_g(t) &=& \int_0^t v_g(w) dw \\
 &=& \begin{cases}
    \int_0^t (v_0 - g \lfloor w \rfloor) dw & v_0 - g \lfloor t \rfloor > -75 \\
-   \int_0^t (-75) dw & v_0 - g \lfloor t \rfloor \leq -75 \\
+   \int_{\alpha}^t (-75) dw & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases} \\
 &=& \begin{cases}
    v_0 t - g \int_0^t \lfloor w \rfloor dw & v_0 - g \lfloor t \rfloor > -75 \\
-   -75t & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75(t - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases} \\
 &=& \begin{cases}
    v_0 t - \frac{g}{2} \lfloor t \rfloor (2t - 1 - \lfloor t \rfloor) & v_0 - g \lfloor t \rfloor > -75 \\
-   -75t & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75(t - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases} \\
 \end{eqnarray*}
 
@@ -131,7 +133,7 @@ With this, we now have derived the following position function:
 \begin{eqnarray*}
 r_g(t) &=& \begin{cases}
    v_0 t - \frac{g}{2} \lfloor t \rfloor (2t - 1 - \lfloor t \rfloor) & v_0 - g \lfloor t \rfloor > -75 \\
-   -75t & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75(t - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases}
 \end{eqnarray*}
 
@@ -142,15 +144,15 @@ some simplifications.
 \begin{eqnarray*}
 r_g(t) &=& \begin{cases}
    v_0 t - \frac{g}{2} \lfloor t \rfloor (2t - 1 - \lfloor t \rfloor) & v_0 - g \lfloor t \rfloor > -75 \\
-   -75t & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75(t - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases} \\
 &=& \begin{cases}
    v_0 \lfloor t \rfloor - \frac{g}{2} \lfloor t \rfloor (2 \lfloor t \rfloor - 1 - \lfloor t \rfloor) & v_0 - g \lfloor t \rfloor > -75 \\
-   -75 \lfloor t \rfloor & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75(\lfloor t \rfloor - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases} \\
 &=& \begin{cases}
    \lfloor t \rfloor (v_0 - \frac{g}{2} (\lfloor t \rfloor - 1)) & v_0 - g \lfloor t \rfloor > -75 \\
-   -75 \lfloor t \rfloor & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75(\lfloor t \rfloor - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases} \\
 \end{eqnarray*}
 
@@ -159,9 +161,17 @@ This gives us our final position function:
 \begin{eqnarray*}
 r_g(t) &=& \begin{cases}
    \lfloor t \rfloor (v_0 - \frac{g}{2} (\lfloor t \rfloor - 1)) & v_0 - g \lfloor t \rfloor > -75 \\
-   -75 \lfloor t \rfloor & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75(\lfloor t \rfloor - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases} \\
 \end{eqnarray*}
+
+For the curious reader, the following is what $\alpha$ should be:
+
+\begin{eqnarray*}
+\alpha &=& \lceil \frac{75 + v_0}{g} \rceil + \frac{1}{75} \int_{0}^{\lceil \frac{75 + v_0}{g} \rceil} (v_0 - g \lfloor t \rfloor) dt \\
+\end{eqnarray*}
+
+Derivation of this constant is left as an excercise.
 
 \subsection{Height Function}
 \label{sec:height-function-height}
@@ -433,7 +443,7 @@ Velocity Function & $v_g(t)$ & $\mathbb{R}^{+} \to \mathbb{R}$ & $v_g(t) = max(v
 \hline
 Position Function & $r_g(t)$ & $\mathbb{R}^{+} \to \mathbb{R}$ & $r_g(t) = \begin{cases}
    \lfloor t \rfloor (v_0 - \frac{g}{2} (\lfloor t \rfloor - 1)) & v_0 - g \lfloor t \rfloor > -75 \\
-   -75 \lfloor t \rfloor & v_0 - g \lfloor t \rfloor \leq -75 \\
+   -75 (\lfloor t \rfloor - \alpha) & v_0 - g \lfloor t \rfloor \leq -75 \\
 \end{cases}$ \\
 \hline
 Height Function & $h_g(v)$ & $\mathbb{R}^{+} \to \mathbb{R}^{+}$ & $h_g(v) = \lceil \frac{v}{g} \rceil (v - \frac{g}{2}(\lceil \frac{v}{g} \rceil - 1))$ \\
